@@ -1,6 +1,9 @@
 package ru.job4j.urlshortcut.repository;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import ru.job4j.urlshortcut.model.ShortcutUrl;
 import ru.job4j.urlshortcut.model.Site;
 
@@ -16,5 +19,14 @@ public interface ShortcutUrlRepository extends JpaRepository<ShortcutUrl, Long> 
     List<ShortcutUrl> findAllBySite(Site site);
 
     boolean existsByCode(String code);
+
+    @Modifying(clearAutomatically = true)
+    @Query("""
+            UPDATE ShortcutUrl shortcutUrl
+            SET shortcutUrl.total = shortcutUrl.total + 1
+            WHERE shortcutUrl.code = :code
+            """
+    )
+    int incrementTotalByCode(@Param("code") String code);
 
 }

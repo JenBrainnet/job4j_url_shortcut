@@ -43,6 +43,16 @@ public class ShortcutUrlService {
                 }));
     }
 
+    @Transactional
+    public Optional<String> getOriginalUrlAndIncrementTotal(String code) {
+        var shortcutUrlOptional = shortcutUrlRepository.findByCode(code);
+        if (shortcutUrlOptional.isEmpty()) {
+            return Optional.empty();
+        }
+        shortcutUrlRepository.incrementTotalByCode(code);
+        return Optional.of(shortcutUrlOptional.get().getOriginalUrl());
+    }
+
     private String generateUniqueCode() {
         String code;
         do {

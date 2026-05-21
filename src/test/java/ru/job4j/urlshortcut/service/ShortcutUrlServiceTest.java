@@ -74,6 +74,38 @@ class ShortcutUrlServiceTest {
         assertThat(response).isEmpty();
     }
 
+    @Test
+    void whenGetOriginalUrlByCodeThenReturnUrlAndIncrementTotal() {
+        var site = registerSite("job4j.ru");
+        var code = shortcutUrlService.convert(site.getId(), ORIGINAL_URL).orElseThrow().getCode();
+
+        var response = shortcutUrlService.getOriginalUrlAndIncrementTotal(code);
+
+        assertThat(response).contains(ORIGINAL_URL);
+        assertThat(shortcutUrlRepository.findByCode(code))
+                .hasValueSatisfying(shortcutUrl -> assertThat(shortcutUrl.getTotal()).isEqualTo(1));
+    }
+
+    @Test
+    void whenGetOriginalUrlByCodeSeveralTimesThenIncrementTotalSeveralTimes() {
+        var site = registerSite("job4j.ru");
+        var code = shortcutUrlService.convert(site.getId(), ORIGINAL_URL).orElseThrow().getCode();
+
+        shortcutUrlService.getOriginalUrlAndIncrementTotal(code);
+        shortcutUrlService.getOriginalUrlAndIncrementTotal(code);
+
+        assertThat(shortcutUrlRepository.findByCode(code))
+                .hasValueSatisfying(shortcutUrl -> assertThat(shortcutUrl.getTotal()).isEqualTo(2));
+    }
+
+    @Test
+    void whenGetOriginalUrlByUnknownCodeThenReturnEmpty() {
+        var response = shortcutUrlService.getOriginalUrlAndIncrementTotal("unknown");
+
+        assertThat(response).isEmpty();
+        assertThat(shortcutUrlRepository.findAll()).isEmpty();
+    }
+
     private ru.job4j.urlshortcut.model.Site registerSite(String domain) {
         var registration = siteService.register(domain);
         return siteRepository.findByLogin(registration.getLogin()).orElseThrow();
