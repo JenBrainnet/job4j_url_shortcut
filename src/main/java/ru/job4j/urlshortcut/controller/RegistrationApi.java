@@ -9,6 +9,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.ResponseEntity;
 import ru.job4j.urlshortcut.dto.RegistrationRequestDto;
 import ru.job4j.urlshortcut.dto.RegistrationResponseDto;
+import ru.job4j.urlshortcut.validation.ValidationErrorResponse;
 
 @Tag(name = "RegistrationController", description = "Site registration APIs")
 public interface RegistrationApi {
@@ -17,7 +18,8 @@ public interface RegistrationApi {
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Registration result was returned",
                     content = @Content(schema = @Schema(implementation = RegistrationResponseDto.class))),
-            @ApiResponse(responseCode = "400", description = "Request body validation failed", content = @Content)
+            @ApiResponse(responseCode = "400", description = "Request body validation failed",
+                    content = @Content(schema = @Schema(implementation = ValidationErrorResponse.class)))
     })
     ResponseEntity<RegistrationResponseDto> register(RegistrationRequestDto request);
 

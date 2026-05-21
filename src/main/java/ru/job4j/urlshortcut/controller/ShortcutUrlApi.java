@@ -13,6 +13,7 @@ import ru.job4j.urlshortcut.dto.ConvertRequestDto;
 import ru.job4j.urlshortcut.dto.ConvertResponseDto;
 import ru.job4j.urlshortcut.dto.StatisticResponseDto;
 import ru.job4j.urlshortcut.security.SiteDetails;
+import ru.job4j.urlshortcut.validation.ValidationErrorResponse;
 
 import java.util.List;
 
@@ -23,7 +24,8 @@ public interface ShortcutUrlApi {
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "URL was converted",
                     content = @Content(schema = @Schema(implementation = ConvertResponseDto.class))),
-            @ApiResponse(responseCode = "400", description = "Request body validation failed", content = @Content),
+            @ApiResponse(responseCode = "400", description = "Request body validation failed",
+                    content = @Content(schema = @Schema(implementation = ValidationErrorResponse.class))),
             @ApiResponse(responseCode = "401", description = "JWT token is missing or invalid", content = @Content),
             @ApiResponse(responseCode = "404", description = "Authenticated site was not found", content = @Content)
     })
