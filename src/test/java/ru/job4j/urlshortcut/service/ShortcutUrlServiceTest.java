@@ -16,6 +16,8 @@ class ShortcutUrlServiceTest {
 
     private static final String ORIGINAL_URL = "https://job4j.ru/profile/exercise/106/task-view/532";
 
+    private static final String OTHER_URL = "https://job4j.ru/profile/exercise/107/task-view/533";
+
     @Autowired
     private ShortcutUrlService shortcutUrlService;
 
@@ -104,6 +106,58 @@ class ShortcutUrlServiceTest {
 
         assertThat(response).isEmpty();
         assertThat(shortcutUrlRepository.findAll()).isEmpty();
+    }
+
+    @Test
+    void whenGetStatisticsThenReturnCurrentSiteUrlsOnly() {
+        var firstSite = registerSite("job4j.ru");
+        var secondSite = registerSite("example.com");
+        shortcutUrlService.convert(firstSite.getId(), ORIGINAL_URL);
+        shortcutUrlService.convert(firstSite.getId(), OTHER_URL);
+        shortcutUrlService.convert(secondSite.getId(), "https://example.com/page");
+
+        var response = shortcutUrlService.getStatistics(firstSite.getId());
+
+        assertThat(response).isPresent();
+        assertThat(response.get())
+                .hasSize(2)
+                .extracting("url")
+                .containsExactlyInAnyOrder(ORIGINAL_URL, OTHER_URL);
+    }
+
+    @Test
+    void whenGetStatisticsThenReturnRedirectTotals() {
+        var site = registerSite("job4j.ru");
+        var code = shortcutUrlService.convert(site.getId(), ORIGINAL_URL).orElseThrow().getCode();
+        shortcutUrlService.getOriginalUrlAndIncrementTotal(code);
+        shortcutUrlService.getOriginalUrlAndIncrementTotal(code);
+
+        var response = shortcutUrlService.getStatistics(site.getId());
+
+        assertThat(response).isPresent();
+        assertThat(response.get())
+                .singleElement()
+                .satisfies(statistic -> {
+                    assertThat(statistic.getUrl()).isEqualTo(ORIGINAL_URL);
+                    assertThat(statistic.getTotal()).isEqualTo(2);
+                });
+    }
+
+    @Test
+    void whenGetStatisticsForSiteWithoutUrlsThenReturnEmptyList() {
+        var site = registerSite("job4j.ru");
+
+        var response = shortcutUrlService.getStatistics(site.getId());
+
+        assertThat(response).isPresent();
+        assertThat(response.get()).isEmpty();
+    }
+
+    @Test
+    void whenGetStatisticsForUnknownSiteThenReturnEmpty() {
+        var response = shortcutUrlService.getStatistics(1L);
+
+        assertThat(response).isEmpty();
     }
 
     private ru.job4j.urlshortcut.model.Site registerSite(String domain) {

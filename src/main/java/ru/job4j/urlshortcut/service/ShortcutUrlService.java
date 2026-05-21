@@ -4,12 +4,14 @@ import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.job4j.urlshortcut.dto.ConvertResponseDto;
+import ru.job4j.urlshortcut.dto.StatisticResponseDto;
 import ru.job4j.urlshortcut.model.ShortcutUrl;
 import ru.job4j.urlshortcut.repository.ShortcutUrlRepository;
 import ru.job4j.urlshortcut.repository.SiteRepository;
 
 import java.security.SecureRandom;
 import java.util.Base64;
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -51,6 +53,18 @@ public class ShortcutUrlService {
         }
         shortcutUrlRepository.incrementTotalByCode(code);
         return Optional.of(shortcutUrlOptional.get().getOriginalUrl());
+    }
+
+    @Transactional(readOnly = true)
+    public Optional<List<StatisticResponseDto>> getStatistics(Long siteId) {
+        return siteRepository.findById(siteId)
+                .map(shortcutUrlRepository::findAllBySite)
+                .map(shortcutUrls -> shortcutUrls.stream()
+                        .map(shortcutUrl -> new StatisticResponseDto(
+                                shortcutUrl.getOriginalUrl(),
+                                shortcutUrl.getTotal()
+                        ))
+                        .toList());
     }
 
     private String generateUniqueCode() {

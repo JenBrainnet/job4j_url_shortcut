@@ -12,8 +12,10 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.net.URI;
+import java.util.List;
 import ru.job4j.urlshortcut.dto.ConvertRequestDto;
 import ru.job4j.urlshortcut.dto.ConvertResponseDto;
+import ru.job4j.urlshortcut.dto.StatisticResponseDto;
 import ru.job4j.urlshortcut.security.SiteDetails;
 import ru.job4j.urlshortcut.service.ShortcutUrlService;
 
@@ -39,6 +41,15 @@ public class ShortcutUrlController {
                 .map(originalUrl -> ResponseEntity.status(HttpStatus.FOUND)
                         .location(URI.create(originalUrl))
                         .<Void>build())
+                .orElseGet(() -> ResponseEntity.notFound().build());
+    }
+
+    @GetMapping("/statistic")
+    public ResponseEntity<List<StatisticResponseDto>> statistic(
+            @AuthenticationPrincipal SiteDetails currentSite
+    ) {
+        return shortcutUrlService.getStatistics(currentSite.getId())
+                .map(ResponseEntity::ok)
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
