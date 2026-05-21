@@ -13,4 +13,6 @@ public interface SiteRepository extends JpaRepository<Site, Long> {
 
     boolean existsByDomain(String domain);
 
+    boolean existsByLogin(String login);
+
 }
