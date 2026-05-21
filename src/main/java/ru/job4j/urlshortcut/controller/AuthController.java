@@ -12,11 +12,12 @@ import ru.job4j.urlshortcut.service.AuthService;
 
 @RestController
 @AllArgsConstructor
-public class AuthController {
+public class AuthController implements AuthApi {
 
     private final AuthService authService;
 
     @PostMapping("/login")
+    @Override
     public ResponseEntity<LoginResponseDto> login(@Valid @RequestBody LoginRequestDto request) {
         return authService.login(request.getLogin(), request.getPassword())
                 .map(ResponseEntity::ok)

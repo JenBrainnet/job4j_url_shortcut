@@ -21,11 +21,12 @@ import ru.job4j.urlshortcut.service.ShortcutUrlService;
 
 @RestController
 @AllArgsConstructor
-public class ShortcutUrlController {
+public class ShortcutUrlController implements ShortcutUrlApi {
 
     private final ShortcutUrlService shortcutUrlService;
 
     @PostMapping("/convert")
+    @Override
     public ResponseEntity<ConvertResponseDto> convert(
             @AuthenticationPrincipal SiteDetails currentSite,
             @Valid @RequestBody ConvertRequestDto request
@@ -36,6 +37,7 @@ public class ShortcutUrlController {
     }
 
     @GetMapping("/redirect/{code}")
+    @Override
     public ResponseEntity<Void> redirect(@PathVariable String code) {
         return shortcutUrlService.getOriginalUrlAndIncrementTotal(code)
                 .map(originalUrl -> ResponseEntity.status(HttpStatus.FOUND)
@@ -45,6 +47,7 @@ public class ShortcutUrlController {
     }
 
     @GetMapping("/statistic")
+    @Override
     public ResponseEntity<List<StatisticResponseDto>> statistic(
             @AuthenticationPrincipal SiteDetails currentSite
     ) {

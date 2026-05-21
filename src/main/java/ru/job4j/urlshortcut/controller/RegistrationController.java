@@ -12,11 +12,12 @@ import ru.job4j.urlshortcut.service.SiteService;
 
 @RestController
 @AllArgsConstructor
-public class RegistrationController {
+public class RegistrationController implements RegistrationApi {
 
     private final SiteService siteService;
 
     @PostMapping("/registration")
+    @Override
     public ResponseEntity<RegistrationResponseDto> register(
             @Valid @RequestBody RegistrationRequestDto request
     ) {
