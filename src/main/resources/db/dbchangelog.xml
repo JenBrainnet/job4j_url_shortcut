@@ -6,4 +6,14 @@
         http://www.liquibase.org/xml/ns/dbchangelog
         https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
 
+    <changeSet id="001-create-sites-table" author="jen">
+        <sqlFile path="db/scripts/001_ddl_create_sites_table.sql"
+                 relativeToChangelogFile="false"/>
+    </changeSet>
+
+    <changeSet id="002-create-shortcut-urls-table" author="jen">
+        <sqlFile path="db/scripts/002_ddl_create_shortcut_urls_table.sql"
+                 relativeToChangelogFile="false"/>
+    </changeSet>
+
 </databaseChangeLog>
