@@ -83,22 +83,69 @@ This helps avoid lost updates when several users open the same short link at the
 
 ## Project Launch
 
-Create the database:
+1. Create the PostgreSQL database:
 
 ```sql
 CREATE DATABASE url_shortcut;
 ```
 
-Run the application:
+2. Check database settings in `src/main/resources/application.properties`:
+
+```properties
+spring.datasource.url=jdbc:postgresql://localhost:5432/url_shortcut
+spring.datasource.username=postgres
+spring.datasource.password=password
+```
+
+3. Run the application for development:
 
 ```bash
 ./mvnw spring-boot:run
 ```
 
-Run tests:
+Or build and run the executable jar:
+
+```bash
+./mvnw package
+```
+
+```bash
+java -jar target/job4j_url_shortcut-0.0.1-SNAPSHOT.jar
+```
+
+4. Open Swagger UI after the application starts:
+
+```text
+http://localhost:8080/swagger-ui/index.html
+```
+
+OpenAPI JSON is available at:
+
+```text
+http://localhost:8080/v3/api-docs
+```
+
+5. Run tests:
 
 ```bash
 ./mvnw test
+```
+
+## API Interaction
+
+The project uses Swagger/OpenAPI to describe and test REST endpoints.
+After starting the application, open Swagger UI and follow the main flow:
+
+1. Register a website with `POST /registration`.
+2. Authenticate with `POST /login` and copy the JWT token.
+3. Convert a long URL with `POST /convert`.
+4. Open `GET /redirect/{code}` to check redirect behavior.
+5. Request `GET /statistic` to view redirect counters.
+
+Protected endpoints require the header:
+
+```text
+Authorization: Bearer <token>
 ```
 
 ## Contacts
