@@ -11,8 +11,9 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
-import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
@@ -25,7 +26,8 @@ import java.time.ZoneOffset;
                         columnNames = {"site_id", "original_url"})
         }
 )
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 public class ShortcutUrl {
 

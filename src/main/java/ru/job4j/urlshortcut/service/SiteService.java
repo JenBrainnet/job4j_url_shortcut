@@ -1,9 +1,9 @@
 package ru.job4j.urlshortcut.service;
 
 import lombok.AllArgsConstructor;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import ru.job4j.urlshortcut.dto.RegistrationResponseDto;
 import ru.job4j.urlshortcut.model.Site;
 import ru.job4j.urlshortcut.repository.SiteRepository;
@@ -25,27 +25,19 @@ public class SiteService {
 
     private final PasswordEncoder passwordEncoder;
 
-    @Transactional
     public RegistrationResponseDto register(String domain) {
         var normalizedDomain = domain.trim();
-        if (siteRepository.existsByDomain(normalizedDomain)) {
-            return new RegistrationResponseDto(false, null, null);
-        }
         var plainPassword = generateCredential();
         var site = new Site();
         site.setDomain(normalizedDomain);
-        site.setLogin(generateUniqueLogin());
+        site.setLogin(LOGIN_PREFIX + generateCredential());
         site.setPassword(passwordEncoder.encode(plainPassword));
-        siteRepository.save(site);
-        return new RegistrationResponseDto(true, site.getLogin(), plainPassword);
-    }
-
-    private String generateUniqueLogin() {
-        String login;
-        do {
-            login = LOGIN_PREFIX + generateCredential();
-        } while (siteRepository.existsByLogin(login));
-        return login;
+        try {
+            siteRepository.saveAndFlush(site);
+            return new RegistrationResponseDto(true, site.getLogin(), plainPassword);
+        } catch (DataIntegrityViolationException exception) {
+            return new RegistrationResponseDto(false, null, null);
+        }
     }
 
     private String generateCredential() {

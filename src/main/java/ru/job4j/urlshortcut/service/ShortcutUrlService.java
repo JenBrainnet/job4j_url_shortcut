@@ -1,6 +1,7 @@
 package ru.job4j.urlshortcut.service;
 
 import lombok.AllArgsConstructor;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.job4j.urlshortcut.dto.ConvertResponseDto;
@@ -26,7 +27,6 @@ public class ShortcutUrlService {
 
     private final ShortcutUrlRepository shortcutUrlRepository;
 
-    @Transactional
     public Optional<ConvertResponseDto> convert(Long siteId, String originalUrl) {
         var siteOptional = siteRepository.findById(siteId);
         if (siteOptional.isEmpty()) {
@@ -34,25 +34,30 @@ public class ShortcutUrlService {
         }
         var site = siteOptional.get();
         var normalizedUrl = originalUrl.trim();
-        return Optional.of(shortcutUrlRepository.findBySiteAndOriginalUrl(site, normalizedUrl)
-                .map(shortcutUrl -> new ConvertResponseDto(shortcutUrl.getCode()))
-                .orElseGet(() -> {
-                    var shortcutUrl = new ShortcutUrl();
-                    shortcutUrl.setSite(site);
-                    shortcutUrl.setOriginalUrl(normalizedUrl);
-                    shortcutUrl.setCode(generateUniqueCode());
-                    return new ConvertResponseDto(shortcutUrlRepository.save(shortcutUrl).getCode());
-                }));
+        try {
+            return Optional.of(shortcutUrlRepository.findBySiteAndOriginalUrl(site, normalizedUrl)
+                    .map(shortcutUrl -> new ConvertResponseDto(shortcutUrl.getCode()))
+                    .orElseGet(() -> {
+                        var shortcutUrl = new ShortcutUrl();
+                        shortcutUrl.setSite(site);
+                        shortcutUrl.setOriginalUrl(normalizedUrl);
+                        shortcutUrl.setCode(generateCode());
+                        return new ConvertResponseDto(shortcutUrlRepository.saveAndFlush(shortcutUrl).getCode());
+                    }));
+        } catch (DataIntegrityViolationException exception) {
+            return shortcutUrlRepository.findBySiteAndOriginalUrl(site, normalizedUrl)
+                    .map(shortcutUrl -> new ConvertResponseDto(shortcutUrl.getCode()));
+        }
     }
 
     @Transactional
     public Optional<String> getOriginalUrlAndIncrementTotal(String code) {
-        var shortcutUrlOptional = shortcutUrlRepository.findByCode(code);
-        if (shortcutUrlOptional.isEmpty()) {
+        var updatedRows = shortcutUrlRepository.incrementTotalByCode(code);
+        if (updatedRows == 0) {
             return Optional.empty();
         }
-        shortcutUrlRepository.incrementTotalByCode(code);
-        return Optional.of(shortcutUrlOptional.get().getOriginalUrl());
+        return shortcutUrlRepository.findByCode(code)
+                .map(ShortcutUrl::getOriginalUrl);
     }
 
     @Transactional(readOnly = true)
@@ -65,14 +70,6 @@ public class ShortcutUrlService {
                                 shortcutUrl.getTotal()
                         ))
                         .toList());
-    }
-
-    private String generateUniqueCode() {
-        String code;
-        do {
-            code = generateCode();
-        } while (shortcutUrlRepository.existsByCode(code));
-        return code;
     }
 
     private String generateCode() {
